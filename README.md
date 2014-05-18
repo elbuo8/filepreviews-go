@@ -5,7 +5,7 @@ This is a client library for the **Demo API** of [FilePreviews.io](http://filepr
 
 ## Installation
 ```
-go get github.com/elbuo8/filepreviews
+go get github.com/elbuo8/filepreviews-go
 ```
 
 ### Example code
