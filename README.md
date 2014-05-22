@@ -4,8 +4,8 @@ This is a client library for the **Demo API** of [FilePreviews.io](http://filepr
 [Sign up to beta](http://eepurl.com/To0U1)
 
 ## Installation
-```
-go get github.com/elbuo8/filepreviews-go
+```bash
+$ go get github.com/elbuo8/filepreviews-go
 ```
 
 ### Example code
@@ -32,8 +32,8 @@ _, err := fp.Generate("http://www.getblimp.com/images/screenshot1.png", opts)
 ## CLI Tool
 
 ### Installation
-```
-go install github.com/elbuo8/filepreviews-go/filepreviews
+```bash
+$ go install github.com/elbuo8/filepreviews-go/filepreviews
 ```
 
 ### Usage
