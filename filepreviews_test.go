@@ -14,10 +14,11 @@ func TestNew(t *testing.T) {
 func TestGenerate(t *testing.T) {
 	fp := New()
 	opts := &FilePreviewsOptions{}
-	_, err := fp.Generate("http://www.getblimp.com/images/screenshot1.png", opts)
+	preview, err := fp.Generate("http://www.getblimp.com/images/screenshot1.png", opts)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
+	t.Log(preview)
 }
 
 func TestGenerateWithMetadata(t *testing.T) {
@@ -29,8 +30,9 @@ func TestGenerateWithMetadata(t *testing.T) {
 		},
 		Metadata: []string{"all"},
 	}
-	_, err := fp.Generate("http://www.getblimp.com/images/screenshot1.png", opts)
+	preview, err := fp.Generate("http://www.getblimp.com/images/screenshot1.png", opts)
 	if err != nil {
 		t.Errorf("%v", err)
 	}
+	t.Log(preview)
 }
