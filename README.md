@@ -29,4 +29,16 @@ opts := &FilePreviewsOptions{
 _, err := fp.Generate("http://www.getblimp.com/images/screenshot1.png", opts)
 ```
 
+## CLI Tool
+
+### Installation
+```
+go install github.com/elbuo8/filepreviews-go/filepreviews
+```
+
+### Usage
+```bash
+$ filepreviews -url=https://www.filepicker.io/api/file/0ehaqJwCTSq4P6jMrix6
+```
+
 ## MIT
