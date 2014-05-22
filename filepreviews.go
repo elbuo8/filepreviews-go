@@ -23,8 +23,8 @@ type FilePreviewsOptions struct {
 }
 
 type FilePreviewsResult struct {
-	MetadataURL string `json:"metadata_url"`
-	PreviewURL  string `json:"preview_url"`
+	Metadata   map[string]interface{} `json:"metadata"`
+	PreviewURL string                 `json:"preview_url"`
 }
 
 func New() *FilePreviews {
@@ -33,6 +33,24 @@ func New() *FilePreviews {
 
 func (fp *FilePreviews) Generate(urlStr string, opts *FilePreviewsOptions) (*FilePreviewsResult, error) {
 	result := &FilePreviewsResult{}
+	resp, err := fp.handleRequest(buildFPURL(urlStr, opts))
+	var URLs map[string]interface{}
+	err = readRequestJSONBody(resp, &URLs)
+	if err != nil {
+		return result, err
+	}
+	resp, err = fp.handleRequest(URLs["metadata_url"].(string))
+	var metadata map[string]interface{}
+	err = readRequestJSONBody(resp, &metadata)
+	if err != nil {
+		return result, err
+	}
+	result.Metadata = metadata
+	result.PreviewURL = URLs["metadata_url"].(string)
+	return result, nil
+}
+
+func buildFPURL(urlStr string, opts *FilePreviewsOptions) string {
 	values := url.Values{}
 	values.Set("url", urlStr)
 	if opts.Metadata != nil {
@@ -48,19 +66,26 @@ func (fp *FilePreviews) Generate(urlStr string, opts *FilePreviewsOptions) (*Fil
 		}
 		values.Set("size", geometry)
 	}
-	resp, err := http.Get(FilePreviewsAPI + "?" + values.Encode())
-	if err != nil {
-		return result, err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return result, fmt.Errorf("Invalid status code: %v", resp.StatusCode)
-	}
-	body, _ := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return result, err
-	}
-	return result, nil
+	return FilePreviewsAPI + "?" + values.Encode()
+}
 
+func (fp *FilePreviews) handleRequest(urlStr string) (*http.Response, error) {
+	resp, err := http.Get(urlStr)
+	if resp.StatusCode != http.StatusOK {
+		return resp, fmt.Errorf("Invalid status code: %v", resp.StatusCode)
+	}
+	return resp, err
+}
+
+func readRequestJSONBody(resp *http.Response, result *map[string]interface{}) error {
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+	err = json.Unmarshal(body, result)
+	if err != nil {
+		return err
+	}
+	return nil
 }
