@@ -10,8 +10,8 @@ $ go get github.com/elbuo8/filepreviews-go
 
 ### Example code
 ```go
-fp := New()
-opts := &FilePreviewsOptions{}
+fp := filepreviews.New()
+opts := &filepreviews.FilePreviewsOptions{}
 _, err := fp.Generate("http://www.getblimp.com/images/screenshot1.png", opts)
 ```
 
