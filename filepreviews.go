@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	FilePreviewsAPI = "https://blimp-previews.herokuapp.com"
+	FilePreviewsAPI = "https://api.filepreviews.io/v1/"
 )
 
 type FilePreviews struct {
