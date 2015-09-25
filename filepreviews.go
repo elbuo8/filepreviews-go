@@ -1,91 +1,99 @@
 package filepreviews
 
 import (
+	"bytes"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
+	"errors"
+	"io"
 	"net/http"
-	"net/url"
-	"strings"
 )
 
 const (
-	FilePreviewsAPI = "https://api.filepreviews.io/v1/"
+	FilePreviewsURL = "https://api.filepreviews.io/v2"
 )
 
 type FilePreviews struct {
-	Client *http.Client
+	Client    *http.Client
+	APIURL    string
+	APIKey    string
+	APISecret string
 }
 
-type FilePreviewsOptions struct {
-	Size     map[string]int
-	Metadata []string
+type Options struct {
+	URL      string                 `json:"url"`
+	Sizes    []string               `json:"sizes"`
+	Format   string                 `json:"format"`
+	Metadata []string               `json:"metadata"`
+	Pages    string                 `json:"pages"`
+	Data     map[string]interface{} `json:"data"`
+	Uploader struct {
+		Destination string                 `json:"destination"`
+		Headers     map[string]interface{} `json:"headers"`
+	} `json:"uploader"`
+}
+
+type size struct {
+	Height string `json:"height"`
+	Width  string `json:"width"`
+}
+
+type preview struct {
+	Page         int  `json:"page"`
+	Size         size `json:"size"`
+	Resized      bool `json:"resized"`
+	OriginalSize size `json:"original_size"`
 }
 
 type FilePreviewsResult struct {
-	Metadata   map[string]interface{} `json:"metadata"`
-	PreviewURL string                 `json:"preview_url"`
+	ID           string    `json:"id"`
+	URL          string    `json:"url"`
+	Status       string    `json:"status"`
+	Preview      preview   `json:"preview"`
+	Thumbnails   []preview `json:"thumbnails"`
+	OriginalFile struct {
+		Name       string                 `json:"name"`
+		Size       int                    `json:"size"`
+		TotalPages int                    `json:"total_pages"`
+		Metadata   map[string]interface{} `json:"metadata"`
+		Extension  string                 `json:"extension"`
+		Encoding   string                 `json:"encoding"`
+		Mimetype   string                 `json:"mimetype"`
+		Type       string                 `json:"type"`
+	} `json:"original_file"`
+	UserData map[string]interface{} `json:"user_data"`
 }
 
-func New() *FilePreviews {
-	return &FilePreviews{Client: http.DefaultClient}
+func New(apiKey, apiSecret string) *FilePreviews {
+	return &FilePreviews{
+		Client:    http.DefaultClient,
+		APIURL:    FilePreviewsURL,
+		APIKey:    apiKey,
+		APISecret: apiSecret,
+	}
 }
 
-func (fp *FilePreviews) Generate(urlStr string, opts *FilePreviewsOptions) (*FilePreviewsResult, error) {
-	result := &FilePreviewsResult{}
-	resp, err := fp.handleRequest(buildFPURL(urlStr, opts))
-	var URLs map[string]interface{}
-	err = readRequestJSONBody(resp, &URLs)
+func (fp *FilePreviews) Generate(opts *Options) (*FilePreviewsResult, error) {
+	body, err := json.Marshal(opts)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
-	resp, err = fp.handleRequest(URLs["metadata_url"].(string))
-	var metadata map[string]interface{}
-	err = readRequestJSONBody(resp, &metadata)
-	if err != nil {
-		return result, err
-	}
-	result.Metadata = metadata
-	result.PreviewURL = URLs["metadata_url"].(string)
-	return result, nil
+	return fp.makeRequest("/previews", "POST", bytes.NewReader(body))
 }
 
-func buildFPURL(urlStr string, opts *FilePreviewsOptions) string {
-	values := url.Values{}
-	values.Set("url", urlStr)
-	if opts.Metadata != nil {
-		values.Set("metadata", strings.Join(opts.Metadata, ","))
-	}
-	if opts.Size != nil {
-		var geometry string
-		if val, ok := opts.Size["width"]; ok {
-			geometry += string(val)
-		}
-		if val, ok := opts.Size["height"]; ok {
-			geometry += "x" + string(val)
-		}
-		values.Set("size", geometry)
-	}
-	return FilePreviewsAPI + "?" + values.Encode()
+func (fp *FilePreviews) Retrive(id string) (*FilePreviewsResult, error) {
+	return fp.makeRequest("/previews/"+id, "GET", nil)
 }
 
-func (fp *FilePreviews) handleRequest(urlStr string) (*http.Response, error) {
-	resp, err := http.Get(urlStr)
-	if resp.StatusCode != http.StatusOK {
-		return resp, fmt.Errorf("Invalid status code: %v", resp.StatusCode)
-	}
-	return resp, err
-}
-
-func readRequestJSONBody(resp *http.Response, result *map[string]interface{}) error {
-	body, err := ioutil.ReadAll(resp.Body)
+func (fp *FilePreviews) makeRequest(endpoint, method string, body io.Reader) (*FilePreviewsResult, error) {
+	result := FilePreviewsResult{}
+	r, _ := http.NewRequest(method, fp.APIURL+endpoint, body)
+	r.SetBasicAuth(fp.APIKey, fp.APISecret)
+	res, err := fp.Client.Do(r)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	resp.Body.Close()
-	err = json.Unmarshal(body, result)
-	if err != nil {
-		return err
+	if res.StatusCode > 201 {
+		return nil, errors.New(http.StatusText(res.StatusCode))
 	}
-	return nil
+	return &result, json.NewDecoder(res.Body).Decode(result)
 }
