@@ -1,7 +1,6 @@
 # Filepreviews-Go
-This is a client library for the **Demo API** of [FilePreviews.io](http://filepreviews.io) service. A lot more to come very soon.
 
-[Sign up to beta](http://eepurl.com/To0U1)
+Go client library for the [FilePreviews.io](http://filepreviews.io/) service. Generate image previews and metadata from almost any kind of file.
 
 ## Installation
 ```bash
