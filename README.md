@@ -17,7 +17,7 @@ _, err := fp.Generate("http://www.getblimp.com/images/screenshot1.png", opts)
 #### Options
 You can optinally send an options object.
 ```go
-fp := New()
+fp := filepreviews.New()
 opts := &filepreviews.Options{
 	Pages: "1",
 	Format: "png",
