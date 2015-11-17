@@ -10,7 +10,7 @@ $ go get github.com/elbuo8/filepreviews-go
 ### Example code
 ```go
 fp := filepreviews.New()
-opts := &filepreviews.FilePreviewsOptions{}
+opts := &filepreviews.Options{}
 _, err := fp.Generate("http://www.getblimp.com/images/screenshot1.png", opts)
 ```
 
@@ -18,12 +18,11 @@ _, err := fp.Generate("http://www.getblimp.com/images/screenshot1.png", opts)
 You can optinally send an options object.
 ```go
 fp := New()
-opts := &FilePreviewsOptions{
-	Size: map[string]int{
-		"width":  50,
-		"height": 100,
-	},
-	Metadata: []string{"all"},
+opts := &filepreviews.Options{
+	Pages: "1",
+	Format: "png",
+	Sizes: [1]string{"500x500"},
+	Metadata: [1]string{"all"},
 }
 _, err := fp.Generate("http://www.getblimp.com/images/screenshot1.png", opts)
 ```
